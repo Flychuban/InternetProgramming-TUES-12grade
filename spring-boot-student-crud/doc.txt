@@ -1,0 +1,30 @@
+Рефлекшън - Student CRUD Application
+=====================================
+
+1. Какво научих:
+   Научих как да създавам RESTful API приложение с Spring Boot. Разбрах как
+   работи MVC архитектурата - Model (Student.java) съдържа данните, Controller
+   (StudentController.java) обработва HTTP заявките, а Service (StudentService.java)
+   съдържа бизнес логиката. Научих как Spring Data JPA автоматично генерира
+   SQL заявки чрез интерфейса StudentRepository.
+
+2. Какви трудности срещнах:
+   Основната трудност беше конфигурирането на Checkstyle - трябваше да спазвам
+   стриктни правила за форматиране на кода (именуване, интервали, дължина на
+   редовете до 120 символа). Също така постигането на >99% test coverage
+   изискваше тестване на equals, hashCode и toString методите.
+
+3. Какво бих подобрил:
+   Бих добавил валидация на входните данни (@Valid, @NotBlank), по-добра обработка
+   на грешки с @ControllerAdvice и GlobalExceptionHandler, и бих използвал DTO
+   обекти вместо директно Entity обекти в контролера. Също бих добавил Swagger
+   документация за API-то.
+
+4. Технологии използвани:
+   - Spring Boot 3.2.2 - framework за уеб приложения
+   - Spring Data JPA - ORM за работа с бази данни
+   - H2 Database - in-memory база данни за разработка
+   - JUnit 5 + Mockito - unit тестове
+   - JaCoCo - code coverage анализ
+   - Maven Checkstyle - статичен анализ на кода
+   - Maven Wrapper (mvnw) - управление на build процеса

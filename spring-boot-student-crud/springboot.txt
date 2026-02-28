@@ -1,0 +1,102 @@
+Документация - Student CRUD Application (Spring Boot)
+=====================================================
+
+1. Описание на проекта:
+   Това е RESTful CRUD (Create, Read, Update, Delete) приложение за управление
+   на студенти. Използва Spring Boot 3.2.2, Spring Data JPA и H2 in-memory
+   база данни. Приложението работи на порт 8082.
+
+2. Структура на проекта (MVC архитектура):
+
+   2.1. Model - Student.java (src/main/java/com/student/crud/model/)
+        - Ред 9: @Entity - маркира класа като JPA entity (таблица в БД)
+        - Ред 12-13: @Id и @GeneratedValue - автоматично генериран primary key
+        - Редове 14-22: Полета - id (Long), firstName (String), lastName (String),
+          age (int), grade (String)
+        - Ред 24-25: Празен конструктор (изискван от JPA)
+        - Ред 27-32: Конструктор с параметри за създаване на нов студент
+        - Редове 34-72: Getter и setter методи за всяко поле
+        - Ред 74-88: equals() - сравнява студенти по всички полета
+        - Ред 90-93: hashCode() - генерира хеш код базиран на всички полета
+        - Ред 95-104: toString() - текстово представяне на студента
+
+   2.2. Repository - StudentRepository.java (src/main/java/com/student/crud/repository/)
+        - Ред 8: extends JpaRepository<Student, Long> - наследява интерфейс,
+          който предоставя готови CRUD методи: findAll(), findById(), save(),
+          deleteById(), existsById()
+        - Ред 7: @Repository - маркира като Spring bean за достъп до данните
+
+   2.3. Service - StudentService.java (src/main/java/com/student/crud/service/)
+        - Ред 9: @Service - маркира класа като сервизен слой
+        - Ред 14-16: Constructor injection - Spring автоматично инжектира repository
+        - Ред 18-20: getAllStudents() - връща списък с всички студенти
+        - Ред 22-24: getStudentById() - търси студент по ID, връща Optional
+        - Ред 26-28: createStudent() - записва нов студент в базата
+        - Ред 30-38: updateStudent() - намира студент по ID и обновява полетата му
+        - Ред 40-46: deleteStudent() - проверява дали съществува и го изтрива
+
+   2.4. Controller - StudentController.java (src/main/java/com/student/crud/controller/)
+        - Ред 17: @RestController - маркира като REST контролер (JSON отговори)
+        - Ред 18: @RequestMapping("/api/students") - базов URL път
+        - Ред 27-30: GET /api/students - връща всички студенти (HTTP 200)
+        - Ред 32-37: GET /api/students/{id} - връща студент по ID (200 или 404)
+        - Ред 39-43: POST /api/students - създава нов студент (HTTP 201)
+        - Ред 45-51: PUT /api/students/{id} - обновява студент (200 или 404)
+        - Ред 53-59: DELETE /api/students/{id} - изтрива студент (204 или 404)
+
+   2.5. CrudApplication.java (src/main/java/com/student/crud/)
+        - Ред 6: @SpringBootApplication - комбинира @Configuration,
+          @EnableAutoConfiguration, @ComponentScan
+        - Ред 9-11: main() метод - стартира Spring Boot приложението
+
+3. Конфигурация:
+
+   3.1. application.properties:
+        - server.port=8082 - порт на сървъра
+        - spring.datasource.url=jdbc:h2:mem:studentdb - H2 in-memory база
+        - spring.jpa.hibernate.ddl-auto=update - автоматично създаване на таблици
+        - spring.h2.console.enabled=true - H2 конзола на /h2-console
+
+   3.2. pom.xml - Maven зависимости и плъгини:
+        - spring-boot-starter-web - REST функционалност
+        - spring-boot-starter-data-jpa - JPA/Hibernate ORM
+        - h2 - in-memory база данни
+        - spring-boot-starter-test - тестови библиотеки (JUnit 5, Mockito)
+        - maven-checkstyle-plugin - статичен анализ на кода (фаза validate)
+        - jacoco-maven-plugin - code coverage анализ
+        - spring-boot-maven-plugin - създаване на executable JAR
+
+4. Unit тестове (src/test/java/com/student/crud/):
+
+   4.1. StudentTest.java - тества модела:
+        - Конструктори (празен и с параметри)
+        - Всички getter/setter методи
+        - equals() с различни сценарии (same, equal, different fields, null, wrong type)
+        - hashCode() за еднакви и различни обекти
+        - toString() съдържание
+
+   4.2. StudentServiceTest.java - тества сервизния слой:
+        - Използва @ExtendWith(MockitoExtension.class) и @Mock/@InjectMocks
+        - Тества всички CRUD операции с mock repository
+        - Покрива и успешни случаи, и случаи когато студент не е намерен
+
+   4.3. StudentControllerTest.java - тества REST контролера:
+        - Използва @WebMvcTest и MockMvc за HTTP заявки без реален сървър
+        - Тества всички endpoints с правилните HTTP статус кодове
+        - Проверява JSON отговорите с jsonPath()
+
+   4.4. CrudApplicationTest.java - тества стартирането:
+        - contextLoads() - проверява че Spring контекстът се зарежда
+        - mainMethodRuns() - покрива main() метода
+
+5. Как се стартира:
+   ./mvnw clean package          # компилация, тестове, checkstyle, coverage
+   java -jar target/crud-0.0.1-SNAPSHOT.jar   # стартиране на приложението
+   ./test.sh                     # изпълнение на CRUD тестови заявки
+
+6. API Endpoints:
+   GET    /api/students      - списък с всички студенти
+   GET    /api/students/{id} - конкретен студент по ID
+   POST   /api/students      - създаване на нов студент (JSON body)
+   PUT    /api/students/{id} - обновяване на студент (JSON body)
+   DELETE /api/students/{id} - изтриване на студент
