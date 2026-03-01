@@ -13,23 +13,47 @@
    да го правиш ръчно - с няколко анотации (@RestController, @GetMapping,
    @PostMapping) имаш готов работещ API.
 
-2. Какви трудности срещнах:
+2. Кое беше най-трудно:
    Основната трудност беше конфигурирането на Checkstyle - трябваше да спазвам
    стриктни правила за форматиране на кода (именуване, интервали, дължина на
-   редовете до 120 символа). Също така постигането на >99% test coverage
-   изискваше тестване на equals, hashCode и toString методите.
+   редовете до 120 символа). Имаше проблеми с поставянето на LineLength под
+   грешен модул и с невалидна стойност за lineSeparator. Също така постигането
+   на 100% test coverage изискваше внимателно тестване на equals, hashCode и
+   toString методите, както и правилно извикване на equals(null) директно
+   вместо чрез assertNotEquals.
 
-3. Какво бих подобрил:
+3. Какво бих подобрил в следваща версия:
    Бих добавил валидация на входните данни (@Valid, @NotBlank), по-добра обработка
    на грешки с @ControllerAdvice и GlobalExceptionHandler, и бих използвал DTO
    обекти вместо директно Entity обекти в контролера. Също бих добавил Swagger
-   документация за API-то.
+   документация за API-то и pagination за GET /api/students.
 
-4. Технологии използвани:
-   - Spring Boot 3.2.2 - framework за уеб приложения
-   - Spring Data JPA - ORM за работа с бази данни
-   - H2 Database - in-memory база данни за разработка
-   - JUnit 5 + Mockito - unit тестове
-   - JaCoCo - code coverage анализ
-   - Maven Checkstyle - статичен анализ на кода
-   - Maven Wrapper (mvnw) - управление на build процеса
+4. Кое не разбрах напълно:
+   Не разбрах напълно как работи вътрешно Spring Data JPA - как точно от един
+   интерфейс (StudentRepository) без нито един ред имплементация Spring генерира
+   всички SQL заявки. Знам, че използва прокси обекти и reflection, но точният
+   механизъм ми остава неясен.
+
+5. Пример за Dependency Injection:
+
+   5.1. Constructor Injection в StudentService.java (ред 12-16):
+        private final StudentRepository repository;
+
+        public StudentService(StudentRepository repository) {
+            this.repository = repository;
+        }
+
+        Spring автоматично създава инстанция на StudentRepository и я подава
+        през конструктора на StudentService. Не е нужна @Autowired анотация,
+        защото Spring Boot автоматично инжектира когато има само един конструктор.
+
+   5.2. Constructor Injection в StudentController.java (ред 21-25):
+        private final StudentService service;
+
+        public StudentController(StudentService service) {
+            this.service = service;
+        }
+
+        По същия начин Spring инжектира StudentService в контролера. Така
+        контролерът не знае как е създаден сервизът - получава го готов.
+        Това е принципът на Inversion of Control (IoC).

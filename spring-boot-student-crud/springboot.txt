@@ -6,9 +6,48 @@
    на студенти. Използва Spring Boot 3.2.2, Spring Data JPA и H2 in-memory
    база данни. Приложението работи на порт 8082.
 
-2. Структура на проекта (MVC архитектура):
+2. Как е настроен Maven (pom.xml):
+   Проектът използва Maven за build, управляван чрез Maven Wrapper (mvnw),
+   което позволява build без глобална инсталация на Maven.
 
-   2.1. Model - Student.java (src/main/java/com/student/crud/model/)
+   2.1. Parent POM (pom.xml, ред 8-13):
+        Наследяваме spring-boot-starter-parent версия 3.2.2, който задава
+        версиите на всички Spring Boot зависимости автоматично.
+
+   2.2. Зависимости (pom.xml, ред 25-43):
+        - spring-boot-starter-web (ред 26-28) - предоставя вградения Tomcat
+          сървър и Spring MVC за REST endpoints
+        - spring-boot-starter-data-jpa (ред 30-32) - JPA/Hibernate ORM за
+          автоматично генериране на SQL заявки от Java интерфейси
+        - h2 (ред 34-37) - in-memory база данни за разработка, scope runtime
+        - spring-boot-starter-test (ред 39-42) - JUnit 5, Mockito, MockMvc,
+          scope test - използва се само при тестване
+
+   2.3. Checkstyle плъгин (pom.xml, ред 48-74):
+        maven-checkstyle-plugin версия 3.3.1, конфигуриран да се изпълнява
+        във фаза "validate" (ред 71) - това е ПРЕДИ компилацията. Ако кодът
+        не отговаря на правилата в checkstyle.xml, build-ът спира с грешка.
+        Настроен е да проверява и основния код, и тестовете (ред 63-66).
+
+   2.4. JaCoCo плъгин (pom.xml, ред 79-97):
+        jacoco-maven-plugin версия 0.8.11 с две изпълнения:
+        - prepare-agent (ред 84-87) - инструментира кода преди тестовете
+        - report (ред 89-95) - генерира HTML coverage отчет във фаза "test"
+        Отчетът се записва в target/site/jacoco/index.html.
+
+   2.5. Surefire плъгин (pom.xml, ред 75-77):
+        maven-surefire-plugin - изпълнява unit тестовете автоматично при build.
+
+   2.6. Spring Boot плъгин (pom.xml, ред 98-101):
+        spring-boot-maven-plugin - създава executable JAR файл, който може
+        да се стартира директно с java -jar.
+
+   2.7. Ред на изпълнение при ./mvnw clean package:
+        validate (checkstyle) -> compile -> test (surefire + jacoco) -> package
+
+3. Как е написан кодът по изискванията на Spring Boot:
+
+   3.1. Model - Student.java (src/main/java/com/student/crud/model/)
         - Ред 9: @Entity - маркира класа като JPA entity (таблица в БД)
         - Ред 12-13: @Id и @GeneratedValue - автоматично генериран primary key
         - Редове 14-22: Полета - id (Long), firstName (String), lastName (String),
@@ -20,83 +59,115 @@
         - Ред 90-93: hashCode() - генерира хеш код базиран на всички полета
         - Ред 95-104: toString() - текстово представяне на студента
 
-   2.2. Repository - StudentRepository.java (src/main/java/com/student/crud/repository/)
+   3.2. Repository - StudentRepository.java (src/main/java/com/student/crud/repository/)
         - Ред 8: extends JpaRepository<Student, Long> - наследява интерфейс,
           който предоставя готови CRUD методи: findAll(), findById(), save(),
-          deleteById(), existsById()
+          deleteById(), existsById(). Не е нужно да пишем SQL заявки.
         - Ред 7: @Repository - маркира като Spring bean за достъп до данните
 
-   2.3. Service - StudentService.java (src/main/java/com/student/crud/service/)
-        - Ред 9: @Service - маркира класа като сервизен слой
-        - Ред 14-16: Constructor injection - Spring автоматично инжектира repository
-        - Ред 18-20: getAllStudents() - връща списък с всички студенти
-        - Ред 22-24: getStudentById() - търси студент по ID, връща Optional
-        - Ред 26-28: createStudent() - записва нов студент в базата
+   3.3. Service - StudentService.java (src/main/java/com/student/crud/service/)
+        - Ред 9: @Service - маркира класа като сервизен слой (Spring bean)
+        - Ред 12-16: Constructor injection - Spring автоматично инжектира
+          StudentRepository чрез конструктора (dependency injection)
+        - Ред 18-20: getAllStudents() - извиква repository.findAll()
+        - Ред 22-24: getStudentById() - търси по ID, връща Optional
+        - Ред 26-28: createStudent() - записва нов студент чрез repository.save()
         - Ред 30-38: updateStudent() - намира студент по ID и обновява полетата му
         - Ред 40-46: deleteStudent() - проверява дали съществува и го изтрива
 
-   2.4. Controller - StudentController.java (src/main/java/com/student/crud/controller/)
+   3.4. Controller - StudentController.java (src/main/java/com/student/crud/controller/)
         - Ред 17: @RestController - маркира като REST контролер (JSON отговори)
-        - Ред 18: @RequestMapping("/api/students") - базов URL път
-        - Ред 27-30: GET /api/students - връща всички студенти (HTTP 200)
-        - Ред 32-37: GET /api/students/{id} - връща студент по ID (200 или 404)
-        - Ред 39-43: POST /api/students - създава нов студент (HTTP 201)
-        - Ред 45-51: PUT /api/students/{id} - обновява студент (200 или 404)
-        - Ред 53-59: DELETE /api/students/{id} - изтрива студент (204 или 404)
+        - Ред 18: @RequestMapping("/api/students") - базов URL път за всички endpoints
+        - Ред 21-25: Constructor injection на StudentService
+        - Ред 27-30: @GetMapping - GET /api/students - връща всички студенти (HTTP 200)
+        - Ред 32-37: @GetMapping("/{id}") - GET /api/students/{id} (200 или 404)
+        - Ред 39-43: @PostMapping - POST /api/students - създава студент (HTTP 201)
+        - Ред 45-51: @PutMapping("/{id}") - PUT /api/students/{id} (200 или 404)
+        - Ред 53-59: @DeleteMapping("/{id}") - DELETE /api/students/{id} (204 или 404)
 
-   2.5. CrudApplication.java (src/main/java/com/student/crud/)
+   3.5. CrudApplication.java (src/main/java/com/student/crud/)
         - Ред 6: @SpringBootApplication - комбинира @Configuration,
-          @EnableAutoConfiguration, @ComponentScan
+          @EnableAutoConfiguration и @ComponentScan
         - Ред 9-11: main() метод - стартира Spring Boot приложението
 
-3. Конфигурация:
-
-   3.1. application.properties:
+   3.6. application.properties (src/main/resources/):
         - server.port=8082 - порт на сървъра
         - spring.datasource.url=jdbc:h2:mem:studentdb - H2 in-memory база
         - spring.jpa.hibernate.ddl-auto=update - автоматично създаване на таблици
-        - spring.h2.console.enabled=true - H2 конзола на /h2-console
+        - spring.h2.console.enabled=true - H2 конзола достъпна на /h2-console
 
-   3.2. pom.xml - Maven зависимости и плъгини:
-        - spring-boot-starter-web - REST функционалност
-        - spring-boot-starter-data-jpa - JPA/Hibernate ORM
-        - h2 - in-memory база данни
-        - spring-boot-starter-test - тестови библиотеки (JUnit 5, Mockito)
-        - maven-checkstyle-plugin - статичен анализ на кода (фаза validate)
-        - jacoco-maven-plugin - code coverage анализ
-        - spring-boot-maven-plugin - създаване на executable JAR
+4. Конфигуриране на unit тестове:
 
-4. Unit тестове (src/test/java/com/student/crud/):
+   4.1. Maven конфигурация:
+        В pom.xml зависимостта spring-boot-starter-test (ред 39-42) включва
+        JUnit 5, Mockito и Spring Test. Плъгинът maven-surefire-plugin (ред 75-77)
+        автоматично открива и изпълнява всички тестови класове при build.
+        JaCoCo плъгинът (ред 79-97) измерва покритието по време на тестовете.
 
-   4.1. StudentTest.java - тества модела:
+   4.2. StudentTest.java - тества модела (15 теста):
         - Конструктори (празен и с параметри)
         - Всички getter/setter методи
-        - equals() с различни сценарии (same, equal, different fields, null, wrong type)
+        - equals() с различни сценарии (same object, equal objects, different
+          fields, null, различен клас)
         - hashCode() за еднакви и различни обекти
         - toString() съдържание
 
-   4.2. StudentServiceTest.java - тества сервизния слой:
-        - Използва @ExtendWith(MockitoExtension.class) и @Mock/@InjectMocks
+   4.3. StudentServiceTest.java - тества сервизния слой (8 теста):
+        - Използва @ExtendWith(MockitoExtension.class) за Mockito интеграция
+        - @Mock за StudentRepository - създава mock обект вместо истинска БД
+        - @InjectMocks за StudentService - инжектира mock-а в сервиза
         - Тества всички CRUD операции с mock repository
         - Покрива и успешни случаи, и случаи когато студент не е намерен
 
-   4.3. StudentControllerTest.java - тества REST контролера:
-        - Използва @WebMvcTest и MockMvc за HTTP заявки без реален сървър
+   4.4. StudentControllerTest.java - тества REST контролера (8 теста):
+        - Използва @WebMvcTest(StudentController.class) - зарежда само web слоя
+        - MockMvc за симулация на HTTP заявки без реален сървър
+        - @MockBean за StudentService - подменя сервиза с mock
         - Тества всички endpoints с правилните HTTP статус кодове
         - Проверява JSON отговорите с jsonPath()
 
-   4.4. CrudApplicationTest.java - тества стартирането:
-        - contextLoads() - проверява че Spring контекстът се зарежда
-        - mainMethodRuns() - покрива main() метода
+   4.5. CrudApplicationTest.java - тества стартирането (2 теста):
+        - contextLoads() - проверява че Spring контекстът се зарежда успешно
+        - mainMethodRuns() - покрива main() метода с --server.port=0
 
-5. Как се стартира:
-   ./mvnw clean package          # компилация, тестове, checkstyle, coverage
-   java -jar target/crud-0.0.1-SNAPSHOT.jar   # стартиране на приложението
-   ./test.sh                     # изпълнение на CRUD тестови заявки
+5. Test Coverage:
+   Достигнат е 100% test coverage по всички метрики:
+   - Instruction coverage: 272/272 = 100%
+   - Branch coverage: 20/20 = 100%
+   - Line coverage: 69/69 = 100%
+   - Method coverage: 30/30 = 100%
+   Общо 33 теста, 0 грешки, 0 пропуснати.
+   Отчетът може да се види с: open target/site/jacoco/index.html
 
-6. API Endpoints:
+6. Linter (Checkstyle):
+   Използван е maven-checkstyle-plugin с Checkstyle 10.12.7. Конфигурацията
+   е в checkstyle.xml и включва следните правила:
+   - Naming conventions (ConstantName, LocalVariableName, MemberName, MethodName,
+     PackageName, ParameterName, TypeName)
+   - Imports (AvoidStarImport, UnusedImports)
+   - Whitespace (WhitespaceAround с разрешени празни конструктори и методи)
+   - Blocks (LeftCurly, RightCurly, NeedBraces)
+   - Line length (максимум 120 символа)
+   - Modifiers (ModifierOrder)
+   - FileTabCharacter (забранени табулации)
+   - NewlineAtEndOfFile (LF формат)
+
+   Проблеми, които срещнах с Checkstyle:
+   - LineLength проверката първоначално беше поставена под TreeWalker модула,
+     но в Checkstyle 10.x тя трябва да е директно под Checker. Това причини
+     грешка "TreeWalker is not allowed as a parent of LineLength".
+   - NewlineAtEndOfFile имаше невалидна стойност "lf_cr_lf" за lineSeparator,
+     която беше коригирана на "lf".
+   - Крайният резултат: 0 Checkstyle violations.
+
+7. API Endpoints:
    GET    /api/students      - списък с всички студенти
    GET    /api/students/{id} - конкретен студент по ID
    POST   /api/students      - създаване на нов студент (JSON body)
    PUT    /api/students/{id} - обновяване на студент (JSON body)
    DELETE /api/students/{id} - изтриване на студент
+
+8. Как се стартира:
+   ./mvnw clean package                       # build + checkstyle + test + coverage
+   java -jar target/crud-0.0.1-SNAPSHOT.jar   # стартиране на приложението
+   ./test.sh                                  # CRUD тестови заявки с curl
