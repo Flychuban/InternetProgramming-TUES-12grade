@@ -2,11 +2,16 @@
 =====================================
 
 1. Какво научих:
-   Научих как да създавам RESTful API приложение с Spring Boot. Разбрах как
-   работи MVC архитектурата - Model (Student.java) съдържа данните, Controller
+   Имах предишен опит с RESTful API-та и с Java като език, но досега никога
+   не бях използвал Spring Boot. Изгледах туториал за това как се работи с
+   Java Spring Boot и ми беше доста интересно. Разбрах как работи MVC
+   архитектурата - Model (Student.java) съдържа данните, Controller
    (StudentController.java) обработва HTTP заявките, а Service (StudentService.java)
    съдържа бизнес логиката. Научих как Spring Data JPA автоматично генерира
-   SQL заявки чрез интерфейса StudentRepository.
+   SQL заявки чрез интерфейса StudentRepository. Бях приятно изненадан колко
+   по-лесно Spring Boot прави създаването на RESTful API в сравнение с това
+   да го правиш ръчно - с няколко анотации (@RestController, @GetMapping,
+   @PostMapping) имаш готов работещ API.
 
 2. Какви трудности срещнах:
    Основната трудност беше конфигурирането на Checkstyle - трябваше да спазвам
